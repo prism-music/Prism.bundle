@@ -18,7 +18,7 @@ class LocalMediaAlbum(Agent.Album):
                       'com.plexapp.agents.none']
 
     def search(self, results, media, lang):
-        results.Append(MetadataSearchResult(id='null', score=100))
+        pass
 
     def update(self, metadata, media, lang):
         update_album(metadata, media, lang)
