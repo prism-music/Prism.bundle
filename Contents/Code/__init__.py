@@ -151,7 +151,7 @@ class localMediaTV(Agent.TV_Shows):
 #####################################################################################################################
 
 class localMediaArtistCommon(object):
-  name = 'Local Media Assets (Artists)'
+  name = 'Prism'
   languages = [Locale.Language.NoLanguage]
   primary_provider = False
   persist_stored_files = False
@@ -264,7 +264,7 @@ class localMediaArtistModern(localMediaArtistCommon, Agent.Artist):
 
 
 class localMediaAlbum(Agent.Album):
-  name = 'Local Media Assets (Albums)'
+  name = 'Prism'
   languages = [Locale.Language.NoLanguage]
   primary_provider = False
   persist_stored_files = False
