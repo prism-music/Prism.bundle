@@ -14,6 +14,7 @@ GENERIC_ARTIST_NAMES = ['various artists', '[unknown artist]', 'soundtrack', 'os
                         'original soundtrack', 'original broadway cast']
 
 
+# noinspection PyPep8Naming
 def Start():
     Log('PRISM START')
 
@@ -223,11 +224,11 @@ def update_album(metadata, media, lang, find_extras=False, artist_extras=None, e
                         digest = hashlib.md5(data).hexdigest()
                         (valid_posters if poster_match else valid_art).append(digest)
                         add_album_image(metadata.posters if poster_match else metadata.art,
-                                      'poster' if poster_match else 'art',
+                                        'poster' if poster_match else 'art',
                                         data_file, filename, data, digest)
                 # If there is an appropriate AudioHelper, use it.
                 audio_helper = audiohelpers.AudioHelpers(part.file)
-                if audio_helper != None:
+                if audio_helper is not None:
                     try:
                         valid_posters = valid_posters + audio_helper.process_metadata(metadata)
 
@@ -300,7 +301,7 @@ def find_track_extra(album, track, file_path, extra_type_map, artist_extras=None
 
         if extra_type in [MusicVideoObject, LyricMusicVideoObject]:
             Log('Found video %s for track: %s from file: %s' % (
-            pretty_title, file_name, os.path.join(os.path.dirname(file_path), video)))
+                pretty_title, file_name, os.path.join(os.path.dirname(file_path), video)))
             track_videos.append(track_video)
         else:
             Log('Skipping track video %s (only regular music videos allowed on tracks)' % video)
@@ -328,9 +329,7 @@ def find_track_extra(album, track, file_path, extra_type_map, artist_extras=None
 def find_artist_extras(path, extra_type_map, artist_extras, artist_name):
     # Look for other videos in this directory.
     for video in [f for f in os.listdir(path)
-                  if os.path.splitext(f)[1][1:].lower() in config.VIDEO_EXTS
-                     and f not in artist_extras]:
-
+                  if os.path.splitext(f)[1][1:].lower() in config.VIDEO_EXTS and f not in artist_extras]:
         if video not in artist_extras:
             Log('Found artist video: %s' % video)
             extra = parse_artist_extra(os.path.join(path, video), extra_type_map, artist_name)
@@ -352,7 +351,8 @@ def find_artist_extras(path, extra_type_map, artist_extras, artist_name):
                            and f not in artist_extras]
             for local_file in local_files:
 
-                # Go ahead and add files directly in the specific path matching the "artist - title - type (optional).ext" convention.
+                # Go ahead and add files directly in the specific path matching the "artist - title - type (
+                # optional).ext" convention.
                 if os.path.isfile(os.path.join(music_video_path, local_file)) and local_file not in artist_extras:
                     Log('Found artist video: %s' % local_file)
                     extra = parse_artist_extra(os.path.join(music_video_path, local_file), extra_type_map, artist_name)
