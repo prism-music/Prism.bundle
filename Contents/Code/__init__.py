@@ -21,7 +21,7 @@ def Start():
 #####################################################################################################################
 
 
-class localMediaArtistCommon(object):
+class LocalMediaArtistCommon(object):
     name = 'Prism'
     languages = [Locale.Language.NoLanguage]
     primary_provider = False
@@ -31,8 +31,8 @@ class localMediaArtistCommon(object):
 
         # Clear out the title to ensure stale data doesn't clobber other agents' contributions.
         metadata.title = None
-        if shouldFindExtras():
-            extra_type_map = getExtraTypeMap()
+        if should_find_extras():
+            extra_type_map = get_extra_type_map()
 
             artist_file_dirs = []
             artist_extras = {}
@@ -44,7 +44,7 @@ class localMediaArtistCommon(object):
             for album in media.children:
                 for track in album.children:
                     part = helpers.unicodize(track.items[0].parts[0].file)
-                    findTrackExtra(album, track, part, extra_type_map, artist_extras)
+                    find_track_extra(album, track, part, extra_type_map, artist_extras)
                     artist_file_dirs.append(os.path.dirname(part))
 
                     audio_helper = audiohelpers.AudioHelpers(part)
@@ -71,13 +71,13 @@ class localMediaArtistCommon(object):
             checked_artist_path = False
             for artist_file_dir in set(artist_file_dirs):
                 path = helpers.unicodize(artist_file_dir)
-                findArtistExtras(path, extra_type_map, artist_extras, media.title)
+                find_artist_extras(path, extra_type_map, artist_extras, media.title)
 
                 parentdir = os.path.split(os.path.abspath(path[:-1]))[0]
                 name_parentdir = os.path.basename(parentdir)
                 artist_has_own_dir = False
                 path_to_use = path
-                if normalizeArtist(name_parentdir) == normalizeArtist(media.title):
+                if normalize_artist(name_parentdir) == normalize_artist(media.title):
                     artist_has_own_dir = True
                     path_to_use = parentdir
 
@@ -91,8 +91,8 @@ class localMediaArtistCommon(object):
                     valid_posters = []
                     valid_art = []
 
-                    valid_file_names = getValidFileNamesForArt(config.ARTIST_POSTER_FILES, config.ARTIST_PREFIX,
-                                                               artist_has_own_dir)
+                    valid_file_names = get_valid_file_names_for_art(config.ARTIST_POSTER_FILES, config.ARTIST_PREFIX,
+                                                                    artist_has_own_dir)
                     for file in valid_file_names:
                         if file in path_files.keys():
                             data = Core.storage.load(os.path.join(path_to_use, path_files[file]))
@@ -101,8 +101,8 @@ class localMediaArtistCommon(object):
                             if poster_name not in metadata.posters:
                                 metadata.posters[poster_name] = Proxy.Media(data)
 
-                    valid_file_names = getValidFileNamesForArt(config.ART_FILES, config.ARTIST_PREFIX,
-                                                               artist_has_own_dir)
+                    valid_file_names = get_valid_file_names_for_art(config.ART_FILES, config.ARTIST_PREFIX,
+                                                                    artist_has_own_dir)
                     for file in valid_file_names:
                         if file in path_files.keys():
                             data = Core.storage.load(os.path.join(path_to_use, path_files[file]))
@@ -114,11 +114,11 @@ class localMediaArtistCommon(object):
                     metadata.art.validate_keys(valid_art)
                     metadata.posters.validate_keys(valid_posters)
 
-            for extra in sorted(artist_extras.values(), key=lambda v: (getExtraSortOrder()[type(v)], v.title)):
+            for extra in sorted(artist_extras.values(), key=lambda v: (get_extra_sort_order()[type(v)], v.title)):
                 metadata.extras.add(extra)
 
 
-class localMediaArtistLegacy(localMediaArtistCommon, Agent.Artist):
+class LocalMediaArtistLegacy(LocalMediaArtistCommon, Agent.Artist):
     contributes_to = ['com.plexapp.agents.discogs', 'com.plexapp.agents.lastfm', 'com.plexapp.agents.plexmusic',
                       'com.plexapp.agents.none']
 
@@ -126,7 +126,7 @@ class localMediaArtistLegacy(localMediaArtistCommon, Agent.Artist):
         results.Append(MetadataSearchResult(id='null', name=media.artist, score=100))
 
 
-class localMediaArtistModern(localMediaArtistCommon, Agent.Artist):
+class LocalMediaArtistModern(LocalMediaArtistCommon, Agent.Artist):
     version = 2
     contributes_to = ['com.plexapp.agents.plexmusic']
 
@@ -134,10 +134,10 @@ class localMediaArtistModern(localMediaArtistCommon, Agent.Artist):
         results.add(SearchResult(id='null', type='artist', parentName=hints.artist, score=100))
 
     def update(self, metadata, media, lang='en', child_guid=None):
-        super(localMediaArtistModern, self).update(metadata, media, lang)
+        super(LocalMediaArtistModern, self).update(metadata, media, lang)
 
 
-class localMediaAlbum(Agent.Album):
+class LocalMediaAlbum(Agent.Album):
     name = 'Prism'
     languages = [Locale.Language.NoLanguage]
     primary_provider = False
@@ -149,12 +149,12 @@ class localMediaAlbum(Agent.Album):
         results.Append(MetadataSearchResult(id='null', score=100))
 
     def update(self, metadata, media, lang):
-        find_extras = shouldFindExtras()
-        extra_type_map = getExtraTypeMap() if find_extras else None
-        updateAlbum(metadata, media, lang, find_extras, artist_extras=[], extra_type_map=extra_type_map)
+        find_extras = should_find_extras()
+        extra_type_map = get_extra_type_map() if find_extras else None
+        update_album(metadata, media, lang, find_extras, artist_extras=[], extra_type_map=extra_type_map)
 
 
-def addAlbumImage(meta_set, meta_type, data_file, root_file, data, digest):
+def add_album_image(meta_set, meta_type, data_file, root_file, data, digest):
     if digest not in meta_set:
         meta_set[digest] = Proxy.Media(data)
         Log('Local asset image added (%s): %s, for file: %s', meta_type, data_file, root_file)
@@ -162,7 +162,7 @@ def addAlbumImage(meta_set, meta_type, data_file, root_file, data, digest):
         Log("Skipping local %s since it's already added", meta_type)
 
 
-def updateAlbum(metadata, media, lang, find_extras=False, artist_extras={}, extra_type_map=None):
+def update_album(metadata, media, lang, find_extras=False, artist_extras={}, extra_type_map=None):
     # Clear out the title to ensure stale data doesn't clobber other agents' contributions.
     metadata.title = None
 
@@ -219,9 +219,9 @@ def updateAlbum(metadata, media, lang, find_extras=False, artist_extras={}, extr
                         data = Core.storage.load(os.path.join(path, path_files[data_file]))
                         digest = hashlib.md5(data).hexdigest()
                         (valid_posters if poster_match else valid_art).append(digest)
-                        addAlbumImage(metadata.posters if poster_match else metadata.art,
+                        add_album_image(metadata.posters if poster_match else metadata.art,
                                       'poster' if poster_match else 'art',
-                                      data_file, filename, data, digest)
+                                        data_file, filename, data, digest)
                 # If there is an appropriate AudioHelper, use it.
                 audio_helper = audiohelpers.AudioHelpers(part.file)
                 if audio_helper != None:
@@ -243,7 +243,7 @@ def updateAlbum(metadata, media, lang, find_extras=False, artist_extras={}, extr
 
                 # Look for a video extra for this track.
                 if find_extras:
-                    track_video = findTrackExtra(media, track, helpers.unicodize(part.file), extra_type_map)
+                    track_video = find_track_extra(media, track, helpers.unicodize(part.file), extra_type_map)
                     if track_video is not None:
                         metadata.tracks[track_key].extras.add(track_video)
 
@@ -262,7 +262,7 @@ def updateAlbum(metadata, media, lang, find_extras=False, artist_extras={}, extr
     metadata.art.validate_keys(valid_art)
 
 
-def findTrackExtra(album, track, file_path, extra_type_map, artist_extras={}):
+def find_track_extra(album, track, file_path, extra_type_map, artist_extras={}):
     # Look for music videos for this track of the format: "track file name - pretty name (optional) - type (optional).ext"
     file_name = os.path.basename(file_path)
     file_root, file_ext = os.path.splitext(file_name)
@@ -312,13 +312,13 @@ def findTrackExtra(album, track, file_path, extra_type_map, artist_extras={}):
                                         file=os.path.join(artist_directory, potential_video_map[track.title]))
 
     if len(track_videos) > 0:
-        track_videos = sorted(track_videos, key=lambda v: (getExtraSortOrder()[type(v)], v.title))
+        track_videos = sorted(track_videos, key=lambda v: (get_extra_sort_order()[type(v)], v.title))
         return track_videos[0]
     else:
         return None
 
 
-def findArtistExtras(path, extra_type_map, artist_extras, artist_name):
+def find_artist_extras(path, extra_type_map, artist_extras, artist_name):
     # Look for other videos in this directory.
     for video in [f for f in os.listdir(path)
                   if os.path.splitext(f)[1][1:].lower() in config.VIDEO_EXTS
@@ -326,12 +326,12 @@ def findArtistExtras(path, extra_type_map, artist_extras, artist_name):
 
         if video not in artist_extras:
             Log('Found artist video: %s' % video)
-            extra = parseArtistExtra(os.path.join(path, video), extra_type_map, artist_name)
+            extra = parse_artist_extra(os.path.join(path, video), extra_type_map, artist_name)
             if extra is not None:
                 artist_extras[video] = extra
 
     # Look for artist videos in the custom path if present.
-    artist_name = normalizeArtist(artist_name)
+    artist_name = normalize_artist(artist_name)
     music_video_path = Prefs['music_video_path']
     if music_video_path is not None and len(music_video_path) > 0:
         if not os.path.exists(music_video_path):
@@ -341,32 +341,32 @@ def findArtistExtras(path, extra_type_map, artist_extras, artist_name):
             local_files = [f for f in os.listdir(music_video_path)
                            if (os.path.splitext(f)[1][1:].lower() in config.VIDEO_EXTS or os.path.isdir(
                     os.path.join(music_video_path, f)))
-                           and normalizeArtist(os.path.basename(f)).startswith(artist_name)
+                           and normalize_artist(os.path.basename(f)).startswith(artist_name)
                            and f not in artist_extras]
             for local_file in local_files:
 
                 # Go ahead and add files directly in the specific path matching the "artist - title - type (optional).ext" convention.
                 if os.path.isfile(os.path.join(music_video_path, local_file)) and local_file not in artist_extras:
                     Log('Found artist video: %s' % local_file)
-                    extra = parseArtistExtra(os.path.join(music_video_path, local_file), extra_type_map, artist_name)
+                    extra = parse_artist_extra(os.path.join(music_video_path, local_file), extra_type_map, artist_name)
                     if extra is not None:
                         artist_extras[local_file] = extra
 
                 # Also add all the videos in the "local video root/artist" directory if we found one.
-                elif os.path.isdir(os.path.join(music_video_path, local_file)) and normalizeArtist(
+                elif os.path.isdir(os.path.join(music_video_path, local_file)) and normalize_artist(
                         os.path.basename(local_file)) == artist_name:
                     for artist_dir_file in [f for f in os.listdir(os.path.join(music_video_path, local_file))
                                             if os.path.splitext(f)[1][1:].lower() in config.VIDEO_EXTS
                                                and f not in artist_extras]:
                         if artist_dir_file not in artist_extras:
                             Log('Found artist video: %s' % artist_dir_file)
-                            extra = parseArtistExtra(os.path.join(music_video_path, local_file, artist_dir_file),
-                                                     extra_type_map, artist_name)
+                            extra = parse_artist_extra(os.path.join(music_video_path, local_file, artist_dir_file),
+                                                       extra_type_map, artist_name)
                             if extra is not None:
                                 artist_extras[artist_dir_file] = extra
 
 
-def parseArtistExtra(path, extra_type_map, artist_name):
+def parse_artist_extra(path, extra_type_map, artist_name):
     video_file, ext = os.path.splitext(os.path.basename(path))
     name_components = video_file.split('-')
 
@@ -382,13 +382,13 @@ def parseArtistExtra(path, extra_type_map, artist_name):
         return None
 
     # Whack the artist name if it's the first component and we have more than one.
-    if len(name_components) > 1 and normalizeArtist(name_components[0]) == artist_name:
+    if len(name_components) > 1 and normalize_artist(name_components[0]) == artist_name:
         name_components.pop(0)
 
     return extra_type(title='-'.join(name_components), file=helpers.unicodize(path))
 
 
-def normalizeArtist(artist_name):
+def normalize_artist(artist_name):
     try:
         u_artist_name = helpers.unicodize(artist_name)
         ret = ''
@@ -405,7 +405,7 @@ def normalizeArtist(artist_name):
         return artist_name
 
 
-def shouldFindExtras():
+def should_find_extras():
     # Determine whether we should look for video extras.
     try:
         v = ConcertVideoObject()
@@ -420,7 +420,7 @@ def shouldFindExtras():
     return find_extras
 
 
-def getExtraTypeMap():
+def get_extra_type_map():
     return {'video': MusicVideoObject,
             'live': LiveMusicVideoObject,
             'lyrics': LyricMusicVideoObject,
@@ -429,12 +429,12 @@ def getExtraTypeMap():
             'concert': ConcertVideoObject}
 
 
-def getExtraSortOrder():
+def get_extra_sort_order():
     return {MusicVideoObject: 0, LyricMusicVideoObject: 1, ConcertVideoObject: 2, LiveMusicVideoObject: 3,
             BehindTheScenesObject: 4, InterviewObject: 5}
 
 
-def getValidFileNamesForArt(names, prefix, add_without_prefix):
+def get_valid_file_names_for_art(names, prefix, add_without_prefix):
     # Return the valid file names for the art
     # given default names and the use of a prefix
     valid_file_names = []
