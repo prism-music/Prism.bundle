@@ -10,8 +10,6 @@ import config
 import helpers
 import localmedia
 
-PERSONAL_MEDIA_IDENTIFIER = "com.plexapp.agents.none"
-
 GENERIC_ARTIST_NAMES = ['various artists', '[unknown artist]', 'soundtrack', 'ost', 'original sound track',
                         'original soundtrack', 'original broadway cast']
 
