@@ -1,0 +1,27 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="Contents.Code.Log" />
+          <option value="Contents.Code.Locale" />
+          <option value="Contents.Code.Core" />
+          <option value="Contents.Code.Proxy" />
+          <option value="Contents.Code.MetadataSearchResult" />
+          <option value="Contents.Code.Agent" />
+          <option value="Contents.Code.SearchResult" />
+          <option value="Contents.Code.MusicVideoObject" />
+          <option value="Contents.Code.LyricMusicVideoObject" />
+          <option value="Contents.Code.Prefs" />
+          <option value="Contents.Code.ConcertVideoObject" />
+          <option value="Contents.Code.Util" />
+          <option value="Contents.Code.Platform" />
+          <option value="Contents.Code.LiveMusicVideoObject" />
+          <option value="Contents.Code.BehindTheScenesObject" />
+          <option value="Contents.Code.InterviewObject" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
