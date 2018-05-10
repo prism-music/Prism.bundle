@@ -26,40 +26,6 @@ def Start():
 
 #####################################################################################################################
 
-@expose
-def ReadTags(f):
-    try:
-        return dict(File(f, easy=True))
-    except Exception, e:
-        Log('Error reading tags from file: %s' % f)
-        return {}
-
-
-#####################################################################################################################
-
-
-#####################################################################################################################
-
-def FindUniqueSubdirs(dirs):
-    final_dirs = {}
-    for dir in dirs:
-        final_dirs[dir] = True
-        try:
-            parent = os.path.split(dir)[0]
-            final_dirs[parent] = True
-            try:
-                final_dirs[os.path.split(parent)[0]] = True
-            except:
-                pass
-        except:
-            pass
-
-    if final_dirs.has_key(''):
-        del final_dirs['']
-    return final_dirs
-
-
-#####################################################################################################################
 
 class localMediaArtistCommon(object):
     name = 'Prism'
