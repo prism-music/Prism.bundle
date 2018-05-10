@@ -54,10 +54,18 @@ def update_album(metadata, media, lang):
     assert(len(tracks) == len(items))
 
     data = {
-        track.id: [text
-                   for tag in item.getall('TCOM')
-                   for text in tag.text]
-        for track, item in zip(tracks, items)
+        'version': 1,
+        'items': [
+            {
+                # Identifier
+                'id': track.id,
+
+                # Composers
+                'composers': [composers
+                              for tag in item.getall('TCOM')
+                              for composers in tag.text]
+            }
+            for track, item in zip(tracks, items)]
     }
 
     Log(data)
