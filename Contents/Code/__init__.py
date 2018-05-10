@@ -5,6 +5,7 @@ import config
 import helpers
 import localmedia
 import mutagen
+import json
 
 
 # noinspection PyPep8Naming
@@ -68,4 +69,6 @@ def update_album(metadata, media, lang):
             for track, item in zip(tracks, items)]
     }
 
-    Log(data)
+    s = json.dumps(data)
+    metadata.studio = s
+    Log(s)
