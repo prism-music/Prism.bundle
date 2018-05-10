@@ -57,7 +57,7 @@ class LocalMediaArtistCommon(object):
 
                     # Look for artist sort field from first track.
                     # TODO maybe analyse all tracks and only add title_sort if they are the same.
-                    if checked_tag == False:
+                    if not checked_tag:
                         checked_tag = True
                         if audio_helper and hasattr(audio_helper, 'get_artist_sort_title'):
                             artist_sort_title = audio_helper.get_artist_sort_title()
@@ -93,9 +93,9 @@ class LocalMediaArtistCommon(object):
 
                     valid_file_names = get_valid_file_names_for_art(config.ARTIST_POSTER_FILES, config.ARTIST_PREFIX,
                                                                     artist_has_own_dir)
-                    for file in valid_file_names:
-                        if file in path_files.keys():
-                            data = Core.storage.load(os.path.join(path_to_use, path_files[file]))
+                    for file_name in valid_file_names:
+                        if file_name in path_files.keys():
+                            data = Core.storage.load(os.path.join(path_to_use, path_files[file_name]))
                             poster_name = hashlib.md5(data).hexdigest()
                             valid_posters.append(poster_name)
                             if poster_name not in metadata.posters:
@@ -103,9 +103,9 @@ class LocalMediaArtistCommon(object):
 
                     valid_file_names = get_valid_file_names_for_art(config.ART_FILES, config.ARTIST_PREFIX,
                                                                     artist_has_own_dir)
-                    for file in valid_file_names:
-                        if file in path_files.keys():
-                            data = Core.storage.load(os.path.join(path_to_use, path_files[file]))
+                    for file_name in valid_file_names:
+                        if file_name in path_files.keys():
+                            data = Core.storage.load(os.path.join(path_to_use, path_files[file_name]))
                             art_name = hashlib.md5(data).hexdigest()
                             valid_art.append(art_name)
                             if art_name not in metadata.art:
@@ -151,7 +151,7 @@ class LocalMediaAlbum(Agent.Album):
     def update(self, metadata, media, lang):
         find_extras = should_find_extras()
         extra_type_map = get_extra_type_map() if find_extras else None
-        update_album(metadata, media, lang, find_extras, artist_extras=[], extra_type_map=extra_type_map)
+        update_album(metadata, media, lang, find_extras, extra_type_map=extra_type_map)
 
 
 def add_album_image(meta_set, meta_type, data_file, root_file, data, digest):
@@ -162,8 +162,11 @@ def add_album_image(meta_set, meta_type, data_file, root_file, data, digest):
         Log("Skipping local %s since it's already added", meta_type)
 
 
-def update_album(metadata, media, lang, find_extras=False, artist_extras={}, extra_type_map=None):
+def update_album(metadata, media, lang, find_extras=False, artist_extras=None, extra_type_map=None):
     # Clear out the title to ensure stale data doesn't clobber other agents' contributions.
+    if artist_extras is None:
+        artist_extras = {}
+
     metadata.title = None
 
     # clear out genres for this album so we will get genres for all tracks in audio_helper.process_metadata(metadata)
@@ -248,12 +251,12 @@ def update_album(metadata, media, lang, find_extras=False, artist_extras={}, ext
                         metadata.tracks[track_key].extras.add(track_video)
 
                 # Look for lyrics.
-                LYRIC_EXTS = ['txt', 'lrc']
-                for ext in LYRIC_EXTS:
-                    file = (file_root + '.' + ext)
-                    if os.path.exists(file):
-                        metadata.tracks[track_key].lyrics[file] = Proxy.LocalFile(file, format=ext)
-                        valid_keys[track_key].append(file)
+                lyric_exts = ['txt', 'lrc']
+                for ext in lyric_exts:
+                    file_name = (file_root + '.' + ext)
+                    if os.path.exists(file_name):
+                        metadata.tracks[track_key].lyrics[file_name] = Proxy.LocalFile(file_name, format=ext)
+                        valid_keys[track_key].append(file_name)
 
     for key in metadata.tracks:
         metadata.tracks[key].lyrics.validate_keys(valid_keys[key])
@@ -262,8 +265,12 @@ def update_album(metadata, media, lang, find_extras=False, artist_extras={}, ext
     metadata.art.validate_keys(valid_art)
 
 
-def find_track_extra(album, track, file_path, extra_type_map, artist_extras={}):
-    # Look for music videos for this track of the format: "track file name - pretty name (optional) - type (optional).ext"
+def find_track_extra(album, track, file_path, extra_type_map, artist_extras=None):
+    # Look for music videos for this track of the format: "track file name - pretty name (optional) - type (
+    # optional).ext"
+    if artist_extras is None:
+        artist_extras = {}
+
     file_name = os.path.basename(file_path)
     file_root, file_ext = os.path.splitext(file_name)
     track_videos = []
@@ -275,7 +282,7 @@ def find_track_extra(album, track, file_path, extra_type_map, artist_extras={}):
         name_components = video_file.split('-')
         extra_type = MusicVideoObject
         if len(name_components) > 1:
-            type_component = re.sub(r'[ ._]+', '', name_components[-1].lower())
+            type_component = re.sub(r'[ ._]+', u'', name_components[-1].lower())
             if type_component in extra_type_map:
                 extra_type = extra_type_map[type_component]
                 name_components.pop(-1)
@@ -286,7 +293,7 @@ def find_track_extra(album, track, file_path, extra_type_map, artist_extras={}):
             pretty_title = pretty_title.replace(file_root, '')
             if pretty_title.startswith(file_ext):
                 pretty_title = pretty_title[len(file_ext):]
-            pretty_title = re.sub(r'^[- ]+', '', pretty_title)
+            pretty_title = re.sub(r'^[- ]+', u'', pretty_title)
 
         track_video = extra_type(title=pretty_title, file=os.path.join(os.path.dirname(file_path), video))
         artist_extras[video] = track_video
