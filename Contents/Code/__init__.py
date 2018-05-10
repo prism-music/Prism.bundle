@@ -21,7 +21,7 @@ class LocalMediaAlbum(Agent.Album):
         pass
 
     def update(self, metadata, media, lang):
-        update_album(metadata, media, lang)
+        update_album(metadata, media)
 
 
 def add_album_image(meta_set, meta_type, data_file, root_file, data, digest):
@@ -37,9 +37,8 @@ def parse_tags(track):
     return mutagen.File(track.file).tags
 
 
-def update_album(metadata, media, lang):
+def update_album(metadata, media):
     Log("UPDATE ALBUM")
-    Log(media.title)
 
     tracks = media.children
 
