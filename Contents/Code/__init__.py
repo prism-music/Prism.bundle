@@ -24,14 +24,6 @@ class LocalMediaAlbum(Agent.Album):
         update_album(metadata, media)
 
 
-def add_album_image(meta_set, meta_type, data_file, root_file, data, digest):
-    if digest not in meta_set:
-        meta_set[digest] = Proxy.Media(data)
-        Log('Local asset image added (%s): %s, for file: %s', meta_type, data_file, root_file)
-    else:
-        Log("Skipping local %s since it's already added", meta_type)
-
-
 def parse_tags(track):
     # TODO: error handling
     return mutagen.File(track.file).tags
