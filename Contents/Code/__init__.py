@@ -1,18 +1,14 @@
 # local media assets agent
-import os, string, hashlib, base64, re, plistlib, unicodedata
+import hashlib
+import os
+import re
+import unicodedata
+from collections import defaultdict
+
+import audiohelpers
 import config
 import helpers
 import localmedia
-import audiohelpers
-import videohelpers
-from collections import defaultdict
-
-from mutagen import File
-from mutagen.mp4 import MP4
-from mutagen.id3 import ID3
-from mutagen.flac import FLAC
-from mutagen.flac import Picture
-from mutagen.oggvorbis import OggVorbis
 
 PERSONAL_MEDIA_IDENTIFIER = "com.plexapp.agents.none"
 
