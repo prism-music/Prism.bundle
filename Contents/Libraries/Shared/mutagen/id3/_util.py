@@ -1,30 +1,34 @@
+# -*- coding: utf-8 -*-
 # Copyright (C) 2005  Michael Urman
 #               2013  Christoph Reiter
+#               2014  Ben Ockmore
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of version 2 of the GNU General Public License as
-# published by the Free Software Foundation.
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 
-from ._compat import long_, integer_types
+from mutagen._compat import long_, integer_types, PY3
+from mutagen._util import MutagenError
 
 
-class error(Exception):
+def is_valid_frame_id(frame_id):
+    return frame_id.isalnum() and frame_id.isupper()
+
+
+class ID3SaveConfig(object):
+
+    def __init__(self, v2_version=4, v23_separator=None):
+        assert v2_version in (3, 4)
+        self.v2_version = v2_version
+        self.v23_separator = v23_separator
+
+
+class error(MutagenError):
     pass
 
 
 class ID3NoHeaderError(error, ValueError):
-    pass
-
-
-class ID3BadUnsynchData(error, ValueError):
-    pass
-
-
-class ID3BadCompressedData(error, ValueError):
-    pass
-
-
-class ID3TagError(error, ValueError):
     pass
 
 
@@ -36,54 +40,33 @@ class ID3EncryptionUnsupportedError(error, NotImplementedError):
     pass
 
 
-class ID3JunkFrameError(error, ValueError):
-    pass
-
-
-class ID3Warning(error, UserWarning):
+class ID3JunkFrameError(error):
     pass
 
 
 class unsynch(object):
     @staticmethod
     def decode(value):
-        output = bytearray()
-        safe = True
-        append = output.append
-        for val in bytearray(value):
-            if safe:
-                append(val)
-                safe = val != 0xFF
-            else:
-                if val >= 0xE0:
-                    raise ValueError('invalid sync-safe string')
-                elif val != 0x00:
-                    append(val)
-                safe = True
-        if not safe:
+        fragments = bytearray(value).split(b'\xff')
+        if len(fragments) > 1 and not fragments[-1]:
             raise ValueError('string ended unsafe')
-        return bytes(output)
+
+        for f in fragments[1:]:
+            if (not f) or (f[0] >= 0xE0):
+                raise ValueError('invalid sync-safe string')
+
+            if f[0] == 0x00:
+                del f[0]
+
+        return bytes(bytearray(b'\xff').join(fragments))
 
     @staticmethod
     def encode(value):
-        output = bytearray()
-        safe = True
-        append = output.append
-        for val in bytearray(value):
-            if safe:
-                append(val)
-                if val == 0xFF:
-                    safe = False
-            elif val == 0x00 or val >= 0xE0:
-                append(0x00)
-                append(val)
-                safe = val != 0xFF
-            else:
-                append(val)
-                safe = True
-        if not safe:
-            append(0x00)
-        return bytes(output)
+        fragments = bytearray(value).split(b'\xff')
+        for f in fragments[1:]:
+            if (not f) or (f[0] >= 0xE0) or (f[0] == 0x00):
+                f.insert(0, 0x00)
+        return bytes(bytearray(b'\xff').join(fragments))
 
 
 class _BitPaddedMixin(object):
@@ -151,6 +134,8 @@ class BitPaddedInt(int, _BitPaddedMixin):
         shift = 0
 
         if isinstance(value, integer_types):
+            if value < 0:
+                raise ValueError
             while value:
                 numeric_value += (value & mask) << shift
                 value >>= 8
@@ -173,6 +158,24 @@ class BitPaddedInt(int, _BitPaddedMixin):
         self.bigendian = bigendian
         return self
 
+if PY3:
+    BitPaddedLong = BitPaddedInt
+else:
+    class BitPaddedLong(long_, _BitPaddedMixin):
+        pass
 
-class BitPaddedLong(long_, _BitPaddedMixin):
-    pass
+
+class ID3BadUnsynchData(error, ValueError):
+    """Deprecated"""
+
+
+class ID3BadCompressedData(error, ValueError):
+    """Deprecated"""
+
+
+class ID3TagError(error, ValueError):
+    """Deprecated"""
+
+
+class ID3Warning(error, UserWarning):
+    """Deprecated"""
